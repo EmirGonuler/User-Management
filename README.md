@@ -29,7 +29,7 @@ This solution follows Clean Architecture (N-Tier) with the following projects:
 ### Setup
 1. Clone the repository
 ```bash
-   git clone https://github.com/EmirGonuler/UserManagement.git
+   git clone https://github.com/EmirGonuler/User-Management.git
 ```
 2. Update the connection string in `UserManagement.API/appsettings.json`
 3. Apply migrations
