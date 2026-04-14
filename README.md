@@ -24,12 +24,12 @@ This solution follows Clean Architecture (N-Tier) with the following projects:
 ### Prerequisites
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) or LocalDB
-- [Visual Studio 2022](https://visualstudio.microsoft.com/)
+- [Visual Studio 2026](https://visualstudio.microsoft.com/)
 
 ### Setup
 1. Clone the repository
 ```bash
-   git clone https://github.com/EmirGonuler/UserManagement.git
+   git clone https://github.com/EmirGonuler/User-Management.git
 ```
 2. Update the connection string in `UserManagement.API/appsettings.json`
 3. Apply migrations
