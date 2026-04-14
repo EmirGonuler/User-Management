@@ -24,7 +24,7 @@ This solution follows Clean Architecture (N-Tier) with the following projects:
 ### Prerequisites
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) or LocalDB
-- [Visual Studio 2022](https://visualstudio.microsoft.com/)
+- [Visual Studio 2026](https://visualstudio.microsoft.com/)
 
 ### Setup
 1. Clone the repository
