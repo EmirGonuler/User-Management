@@ -1,0 +1,58 @@
+﻿@model UserManagement.Web.Models.UserViewModel
+
+@{
+    ViewData["Title"] = "Delete User";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">🗑️ Confirm Delete</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">
+                        Are you sure you want to delete this user?
+                        <strong>This action cannot be undone.</strong>
+                    </p>
+
+                    <hr />
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Full Name</dt>
+                        <dd class="col-sm-8">@Model.FullName</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            @(Model.IsActive ? "Active" : "Inactive")
+                        </dd>
+
+                        <dt class="col-sm-4">Groups</dt>
+                        <dd class="col-sm-8">
+                            @(Model.Groups.Any() ? string.Join(", ", Model.Groups) : "None")
+                        </dd>
+                    </dl>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <form asp-action="Delete"
+                          asp-route-id="@Model.Id"
+                          method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            Yes, Delete
+                        </button>
+                    </form>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
