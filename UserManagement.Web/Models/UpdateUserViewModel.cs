@@ -4,7 +4,8 @@ namespace UserManagement.Web.Models
 {
     /// <summary>
     /// ViewModel for the Edit User form.
-    /// Includes IsActive so users can be deactivated without deletion.
+    /// Includes group assignment so users can be added/removed
+    /// from groups directly on the edit page.
     /// </summary>
     public class UpdateUserViewModel
     {
@@ -28,5 +29,14 @@ namespace UserManagement.Web.Models
 
         [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
+
+        // All groups available in the system (for the checkboxes)
+        public List<GroupViewModel> AvailableGroups { get; set; } = new();
+
+        // IDs of groups the user currently belongs to
+        public List<int> CurrentGroupIds { get; set; } = new();
+
+        // IDs submitted from the form checkboxes
+        public List<int> SelectedGroupIds { get; set; } = new();
     }
 }

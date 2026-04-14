@@ -44,9 +44,13 @@ namespace UserManagement.Web.Controllers
         // ─────────────────────────────────────────
         // GET /users/create — Show Create Form
         // ─────────────────────────────────────────
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View(new CreateUserViewModel());
+            var model = new CreateUserViewModel
+            {
+                AvailableGroups = await _userApiService.GetAllGroupsAsync()
+            };
+            return View(model);
         }
 
         // ─────────────────────────────────────────
@@ -56,26 +60,47 @@ namespace UserManagement.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateUserViewModel model)
         {
+            // Remove navigation properties from validation
+            ModelState.Remove(nameof(model.AvailableGroups));
+
             if (!ModelState.IsValid)
+            {
+                model.AvailableGroups = await _userApiService.GetAllGroupsAsync();
                 return View(model);
+            }
 
             try
             {
+                // Step 1 — Create the user
                 var (success, message) = await _userApiService.CreateUserAsync(model);
 
-                if (success)
+                if (!success)
                 {
-                    TempData["Success"] = "User created successfully!";
-                    return RedirectToAction(nameof(Index));
+                    ModelState.AddModelError(string.Empty, message);
+                    model.AvailableGroups = await _userApiService.GetAllGroupsAsync();
+                    return View(model);
                 }
 
-                ModelState.AddModelError(string.Empty, message);
-                return View(model);
+                // Step 2 — Get the newly created user to find their ID
+                var allUsers = await _userApiService.GetAllUsersAsync();
+                var newUser = allUsers.FirstOrDefault(u =>
+                    u.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase));
+
+                // Step 3 — Assign selected groups if any were chosen
+                if (newUser is not null && model.SelectedGroupIds.Any())
+                {
+                    foreach (var groupId in model.SelectedGroupIds)
+                        await _userApiService.AddUserToGroupAsync(newUser.Id, groupId);
+                }
+
+                TempData["Success"] = "User created successfully!";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating user.");
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred.");
+                model.AvailableGroups = await _userApiService.GetAllGroupsAsync();
                 return View(model);
             }
         }
@@ -87,7 +112,14 @@ namespace UserManagement.Web.Controllers
         {
             try
             {
-                var user = await _userApiService.GetUserByIdAsync(id);
+                // Load user and all available groups in parallel for performance
+                var userTask = _userApiService.GetUserByIdAsync(id);
+                var groupsTask = _userApiService.GetAllGroupsAsync();
+
+                await Task.WhenAll(userTask, groupsTask);
+
+                var user = userTask.Result;
+                var groups = groupsTask.Result;
 
                 if (user is null)
                 {
@@ -101,8 +133,18 @@ namespace UserManagement.Web.Controllers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Email = user.Email,
-                    IsActive = user.IsActive
+                    IsActive = user.IsActive,
+                    AvailableGroups = groups,
+
+                    // Match current group names against available groups to get IDs
+                    CurrentGroupIds = groups
+                        .Where(g => user.Groups.Contains(g.Name))
+                        .Select(g => g.Id)
+                        .ToList()
                 };
+
+                // Pre-select current groups
+                model.SelectedGroupIds = new List<int>(model.CurrentGroupIds);
 
                 return View(model);
             }
@@ -121,27 +163,55 @@ namespace UserManagement.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, UpdateUserViewModel model)
         {
+            // Remove navigation properties from validation
+            ModelState.Remove(nameof(model.AvailableGroups));
+            ModelState.Remove(nameof(model.CurrentGroupIds));
+
             if (!ModelState.IsValid)
+            {
+                model.AvailableGroups = await _userApiService.GetAllGroupsAsync();
                 return View(model);
+            }
 
             try
             {
                 model.Id = id;
+
+                // Step 1 — Save user details (name, email, isActive)
                 var (success, message) = await _userApiService.UpdateUserAsync(model);
 
-                if (success)
+                if (!success)
                 {
-                    TempData["Success"] = "User updated successfully!";
-                    return RedirectToAction(nameof(Index));
+                    ModelState.AddModelError(string.Empty, message);
+                    model.AvailableGroups = await _userApiService.GetAllGroupsAsync();
+                    return View(model);
                 }
 
-                ModelState.AddModelError(string.Empty, message);
-                return View(model);
+                // Step 2 — Sync group memberships
+                // Groups to add = selected but not currently in
+                var groupsToAdd = model.SelectedGroupIds
+                    .Except(model.CurrentGroupIds)
+                    .ToList();
+
+                // Groups to remove = currently in but not selected
+                var groupsToRemove = model.CurrentGroupIds
+                    .Except(model.SelectedGroupIds)
+                    .ToList();
+
+                foreach (var groupId in groupsToAdd)
+                    await _userApiService.AddUserToGroupAsync(id, groupId);
+
+                foreach (var groupId in groupsToRemove)
+                    await _userApiService.RemoveUserFromGroupAsync(id, groupId);
+
+                TempData["Success"] = "User updated successfully!";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating user {UserId}.", id);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred.");
+                model.AvailableGroups = await _userApiService.GetAllGroupsAsync();
                 return View(model);
             }
         }

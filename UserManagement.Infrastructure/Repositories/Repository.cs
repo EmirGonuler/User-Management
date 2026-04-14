@@ -5,11 +5,11 @@ using UserManagement.Infrastructure.Data;
 namespace UserManagement.Infrastructure.Repositories
 {
     /// <summary>
-    /// Generic repository implementation providing standard CRUD operations
-    /// for any entity type. Specific repositories inherit from this class,
-    /// getting CRUD for free and only adding their own custom queries.
+    /// Generic repository providing standard CRUD operations.
+    /// Methods are marked virtual so specific repositories can
+    /// override them to add eager loading (e.g. UserRepository
+    /// overrides GetAllAsync to include UserGroups).
     /// </summary>
-    /// <typeparam name="T">The entity type to manage.</typeparam>
     public class Repository<T> : IRepository<T> where T : class
     {
         protected readonly ApplicationDbContext _context;
@@ -21,12 +21,12 @@ namespace UserManagement.Infrastructure.Repositories
             _dbSet = context.Set<T>();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }
 
-        public async Task<T?> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
         }

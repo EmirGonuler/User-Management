@@ -164,5 +164,78 @@ namespace UserManagement.Web.Services
                 return (false, "An unexpected error occurred.");
             }
         }
+
+        // ─────────────────────────────────────────
+        // GET all groups (for the dropdown list)
+        // ─────────────────────────────────────────
+        public async Task<List<GroupViewModel>> GetAllGroupsAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("api/groups");
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<GroupViewModel>>(json, _jsonOptions)
+                       ?? new List<GroupViewModel>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching groups from API.");
+                return new List<GroupViewModel>();
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // POST — add user to a group
+        // ─────────────────────────────────────────
+        public async Task<(bool Success, string Message)> AddUserToGroupAsync(
+            int userId, int groupId)
+        {
+            try
+            {
+                var response = await _httpClient
+                    .PostAsync($"api/groups/{groupId}/users/{userId}", null);
+
+                if (response.IsSuccessStatusCode)
+                    return (true, "User added to group.");
+
+                var error = await response.Content.ReadAsStringAsync();
+                return (false, error);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error adding user {UserId} to group {GroupId}.", userId, groupId);
+                return (false, "An unexpected error occurred.");
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // DELETE — remove user from a group
+        // ─────────────────────────────────────────
+        public async Task<(bool Success, string Message)> RemoveUserFromGroupAsync(
+            int userId, int groupId)
+        {
+            try
+            {
+                var response = await _httpClient
+                    .DeleteAsync($"api/groups/{groupId}/users/{userId}");
+
+                if (response.IsSuccessStatusCode)
+                    return (true, "User removed from group.");
+
+                var error = await response.Content.ReadAsStringAsync();
+                return (false, error);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error removing user {UserId} from group {GroupId}.", userId, groupId);
+                return (false, "An unexpected error occurred.");
+            }
+        }
+
+
     }
 }

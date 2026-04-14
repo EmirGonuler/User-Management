@@ -4,8 +4,8 @@ namespace UserManagement.Web.Models
 {
     /// <summary>
     /// ViewModel for the Create User form.
-    /// DataAnnotations drive client-side and server-side validation
-    /// automatically through Razor tag helpers.
+    /// Includes group selection so a user can be assigned
+    /// to groups at the point of creation.
     /// </summary>
     public class CreateUserViewModel
     {
@@ -24,5 +24,11 @@ namespace UserManagement.Web.Models
         [StringLength(255)]
         [Display(Name = "Email Address")]
         public string Email { get; set; } = string.Empty;
+
+        // All available groups for the checkboxes
+        public List<GroupViewModel> AvailableGroups { get; set; } = new();
+
+        // IDs selected on the form
+        public List<int> SelectedGroupIds { get; set; } = new();
     }
 }

@@ -9,10 +9,35 @@ namespace UserManagement.Infrastructure.Repositories
     /// Handles all database operations specific to Users.
     /// Inherits standard CRUD from Repository<User> and adds
     /// User-specific queries like fetching by email or group.
+    /// GetAllAsync is overridden here to eagerly load UserGroups
+    /// so group names are available in API responses.
     /// </summary>
     public class UserRepository : Repository<User>, IUserRepository
     {
         public UserRepository(ApplicationDbContext context) : base(context) { }
+
+        /// <summary>
+        /// Overrides the base GetAllAsync to include group memberships.
+        /// Without this, UserGroups is always an empty collection.
+        /// </summary>
+        public override async Task<IEnumerable<User>> GetAllAsync()
+        {
+            return await _context.Users
+                .Include(u => u.UserGroups)
+                    .ThenInclude(ug => ug.Group)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Overrides GetByIdAsync to include group memberships for a single user.
+        /// </summary>
+        public override async Task<User?> GetByIdAsync(int id)
+        {
+            return await _context.Users
+                .Include(u => u.UserGroups)
+                    .ThenInclude(ug => ug.Group)
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
 
         public async Task<User?> GetByEmailAsync(string email)
         {
