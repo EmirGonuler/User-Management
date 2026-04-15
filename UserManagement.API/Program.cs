@@ -6,18 +6,18 @@ using UserManagement.Infrastructure.Seeds;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Services ────────────────────────────────────────────
-builder.Services.AddInfrastructure(builder.Configuration);
+
+// Pass the environment so DependencyInjection.cs can skip
+// SQL Server when running integration tests
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddControllers();
-
-// .NET 10 built-in OpenAPI support
 builder.Services.AddOpenApi();
 
-// Allow the MVC Web project to call this API (CORS)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebProject", policy =>
-        policy.WithOrigins("https://localhost:7001", "http://localhost:5001")
+        policy.WithOrigins("https://localhost:7227", "http://localhost:5135")
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
@@ -25,19 +25,18 @@ builder.Services.AddCors(options =>
 // ── App Pipeline ────────────────────────────────────────
 var app = builder.Build();
 
-// Seed the database with initial data on startup
-using (var scope = app.Services.CreateScope())
+// Skip seeding during integration tests — the test factory
+// seeds its own in-memory database instead
+if (!builder.Environment.IsEnvironment("Testing"))
 {
+    using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await DatabaseSeeder.SeedAsync(context);
 }
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
-    // Maps the OpenAPI JSON endpoint
     app.MapOpenApi();
-
-    // Scalar UI — loads at /scalar/v1
     app.MapScalarApiReference(options =>
     {
         options.Title = "User Management API";
@@ -50,3 +49,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Required for WebApplicationFactory in integration tests
+public partial class Program { }
