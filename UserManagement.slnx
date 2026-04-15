@@ -1,5 +1,10 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path="../../Pictures/Screenshots 1/Screenshot_User_Add.png" />
+    <File Path="../../Pictures/Screenshots 1/Screenshot_User_Delete.png" />
+    <File Path="../../Pictures/Screenshots 1/Screenshot_User_Edit.png" />
+    <File Path="../../Pictures/Screenshots 1/Screenshot_User_Management_Portal.png" />
+    <File Path="../Screenshot_Architecture.png" />
     <File Path="README.md" />
   </Folder>
   <Project Path="UserManagement.API/UserManagement.API.csproj" />
