@@ -98,7 +98,7 @@ Make sure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/UserManagement.git
+git clone https://github.com/EmirGonuler/UserManagement.git
 cd UserManagement
 ```
 
